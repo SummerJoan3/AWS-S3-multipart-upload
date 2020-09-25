@@ -1,0 +1,22 @@
+{
+  "name": "aws-s3-multipart-upload",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SummerJoan3/AWS-S3-multipart-upload.git"
+  },
+  "author": "xjq",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SummerJoan3/AWS-S3-multipart-upload/issues"
+  },
+  "homepage": "https://github.com/SummerJoan3/AWS-S3-multipart-upload#readme",
+  "dependencies": {
+    "aws-sdk": "^2.760.0"
+  }
+}
