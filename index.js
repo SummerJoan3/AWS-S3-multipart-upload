@@ -4,41 +4,57 @@ const eventKey = ['progress', 'success', 'error', 'abort']
 
 class UploadPart {
   constructor(props) {
-    this.chunks = []
+    const { config = {}, options = {} } = props || {}
+    // OSS参数
+    this.config = config
+    this.options = options
+
+    // 上传成功的分片返回值
     this.parts = []
+
+    // OSS实例
     this.instance = null
+    // 上传ID
     this.UploadId = null
     this.Bucket = null
     this.Key = null
+
+    // 监听事件
     this.event = {}
+    // 剩余上传队列
     this.uploadEventQueue = []
-    this.totalEvent = Infinity
+    this.totalEvent = 0
+    // 状态
     this.status = 'PENDING'
-    this.init(props)
+    // 错误信息
+    this.errorMsg = ''
   }
 
   init(props) {
-    const { config = {}, options = {}, Bucket = 'your Bucket' } = props || {}
-    const defaultConfig = {
-      accessKeyId: 'your accessKeyId',
-      secretAccessKey: 'your secretAccessKey',
-      apiVersion: '2006-03-01',
-      region: 'your region',
-    }
-    const mergeConfig = Object.assign({}, defaultConfig, config)
+    return new Promise((resolve, reject) => {
+      const { Bucket = 'your Bucket' } = props || {}
+      const defaultConfig = {
+        accessKeyId: 'your accessKeyId',
+        secretAccessKey: 'your secretAccessKey',
+        apiVersion: '2006-03-01',
+        region: 'your region',
+      }
+      const mergeConfig = Object.assign({}, defaultConfig, this.config)
 
-    AWS.config.update(mergeConfig)
-    this.Bucket = Bucket
-    const defaultOptions = {
-      queueSize: 1,
-      connectTimeout: 1000 * 10,
-      httpOptions: {
-        timeout: 1000 * 60 * 60 * 2,
-      },
-    }
+      AWS.config.update(mergeConfig)
+      this.Bucket = Bucket
+      const defaultOptions = {
+        queueSize: 1,
+        connectTimeout: 1000 * 10,
+        httpOptions: {
+          timeout: 1000 * 60 * 60 * 2,
+        },
+      }
 
-    const mergeOptions = Object.assign({}, defaultOptions, options)
-    this.instance = new AWS.S3(mergeOptions)
+      const mergeOptions = Object.assign({}, defaultOptions, this.options)
+      this.instance = new AWS.S3(mergeOptions)
+      resolve()
+    })
   }
 
   fileSlice(file, chunkSize) {
@@ -89,6 +105,7 @@ class UploadPart {
   }
 
   abort() {
+    if (!this.instance) return
     const params = {
       Bucket: this.Bucket,
       Key: this.Key,
@@ -152,6 +169,8 @@ class UploadPart {
   }
 
   send(config) {
+    await this.init();
+
     let { file, chunkSize = 5, Key = Math.random() } = config
     chunkSize = chunkSize * 1024 * 1024
     const { size } = file
@@ -171,11 +190,11 @@ class UploadPart {
   }
 
   reset() {
-    this.UploadId = null
-    this.Key = null
-    this.uploadEventQueue = []
-    this.parts = []
-    this.chunks = []
+    this.UploadId = null;
+    this.Key = null;
+    this.Bucket = null;
+    this.uploadEventQueue = [];
+    this.parts = [];
   }
 
   complete() {
